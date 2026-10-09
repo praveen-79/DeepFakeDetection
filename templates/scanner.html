@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}AI Forensic Scanner | Deepfake Detection Application{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card-cyber p-4 mb-4">
+      <h4 class="fw-bold mb-2"><i class="bi bi-cpu-fill text-info me-2"></i>Multi-Model Deepfake Forensic Analyzer</h4>
+      <p class="text-secondary small mb-4">
+        Test the end-to-end pipeline: <strong>OpenCV Video/Image Preprocessing &rarr; MesoNet (64-D) + XceptionNet (128-D) + Vision Transformer (128-D) &rarr; 320-D Feature Fusion &rarr; Random Forest Binary Classifier</strong>.
+      </p>
+
+      <form action="{{ url_for('forensic_scanner') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label small text-secondary">Select Image or Video File</label>
+          <input type="file" name="media" class="form-control bg-dark text-light border-secondary" accept="image/*,video/*" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-secondary">Forensic Inspection Mode</label>
+          <select name="simulation_mode" class="form-select bg-dark text-light border-secondary">
+            <option value="auto" selected>Standard Multi-Model Inference</option>
+            <option value="simulate_deepfake">Simulate GAN / Face-Swap Artifact Injection</option>
+            <option value="simulate_real">Verify Natural Camera Sensor Baseline</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-gradient py-2">
+            <i class="bi bi-search me-1"></i>Run Scan
+          </button>
+        </div>
+      </form>
+    </div>
+
+    {% if result %}
+      <div class="card-cyber p-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom border-secondary border-opacity-25 pb-3 mb-4">
+          <div>
+            <span class="text-secondary small text-uppercase">Forensic Report for</span>
+            <h5 class="fw-bold mb-0 text-white">{{ result.filename }} <span class="badge bg-secondary ms-2">{{ result.media_type | upper }}</span></h5>
+          </div>
+          <div class="mt-2 mt-md-0">
+            {% if result.is_fake %}
+              <span class="badge badge-fake fs-6 px-4 py-2 rounded-pill">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>DEEPFAKE DETECTED ({{ result.confidence }}%)
+              </span>
+            {% else %}
+              <span class="badge badge-verified fs-6 px-4 py-2 rounded-pill">
+                <i class="bi bi-patch-check-fill me-2"></i>GENUINE MEDIA ({{ result.confidence }}%)
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 h-100">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="fw-semibold text-info">MesoNet-4 (CNN)</span>
+                <span class="badge bg-dark border border-secondary">{{ result.model_breakdown.mesonet_dim }}-D Vector</span>
+              </div>
+              <p class="text-secondary small mb-2">Mesoscopic high-frequency Laplacian &amp; boundary blending analysis.</p>
+              <div class="fw-bold fs-5 {% if result.model_breakdown.mesonet_fake_score >= 50 %}text-danger{% else %}text-success{% endif %}">
+                Anomaly Score: {{ result.model_breakdown.mesonet_fake_score }}%
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 h-100">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="fw-semibold text-info">XceptionNet</span>
+                <span class="badge bg-dark border border-secondary">{{ result.model_breakdown.xception_dim }}-D Vector</span>
+              </div>
+              <p class="text-secondary small mb-2">Depthwise separable convolution texture &amp; cross-channel consistency.</p>
+              <div class="fw-bold fs-5 {% if result.model_breakdown.xception_fake_score >= 50 %}text-danger{% else %}text-success{% endif %}">
+                Anomaly Score: {{ result.model_breakdown.xception_fake_score }}%
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 h-100">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="fw-semibold text-info">Vision Transformer (ViT)</span>
+                <span class="badge bg-dark border border-secondary">{{ result.model_breakdown.vit_dim }}-D Vector</span>
+              </div>
+              <p class="text-secondary small mb-2">16&times;16 patch self-attention global geometry &amp; illumination coherence.</p>
+              <div class="fw-bold fs-5 {% if result.model_breakdown.vit_fake_score >= 50 %}text-danger{% else %}text-success{% endif %}">
+                Anomaly Score: {{ result.model_breakdown.vit_fake_score }}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center small">
+          <span><strong>Frames Extracted:</strong> {{ result.frames_analyzed }}</span>
+          <span><strong>Fused Feature Vector:</strong> {{ result.fused_vector_dim }} Dimensions (64 + 128 + 128)</span>
+          <span><strong>Classifier:</strong> {{ result.model_breakdown.classifier }}</span>
+          <span><strong>Gatekeeper Action:</strong>
+            {% if result.is_fake %}
+              <strong class="text-danger">BLOCK UPLOAD</strong>
+            {% else %}
+              <strong class="text-success">ALLOW POSTING</strong>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

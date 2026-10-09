@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Login | VeriShare{% endblock %}
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="card-cyber p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="bi bi-shield-lock text-info display-5"></i>
+        <h3 class="fw-bold mt-2">Sign In to VeriShare</h3>
+        <p class="text-secondary small">AI-Protected Social Media Network</p>
+      </div>
+
+      <form action="{{ url_for('login') }}" method="POST">
+        <div class="mb-3">
+          <label class="form-label small text-secondary">Username or Email</label>
+          <input type="text" name="identifier" class="form-control bg-dark text-light border-secondary" placeholder="praveen" required>
+        </div>
+        <div class="mb-4">
+          <label class="form-label small text-secondary">Password</label>
+          <input type="password" name="password" class="form-control bg-dark text-light border-secondary" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-gradient w-100 py-2 mb-3">Sign In</button>
+      </form>
+
+      <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 small text-secondary mb-3">
+        <strong class="text-info">Demo Credentials:</strong><br>
+        Username: <code>praveen</code> &bull; Password: <code>praveen123</code>
+      </div>
+
+      <div class="text-center small text-secondary">
+        Don't have an account? <a href="{{ url_for('register') }}" class="text-info text-decoration-none">Create Account</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

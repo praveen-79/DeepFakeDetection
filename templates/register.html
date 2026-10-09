@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Register | VeriShare{% endblock %}
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-7 col-lg-6">
+    <div class="card-cyber p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="bi bi-person-plus-fill text-info display-5"></i>
+        <h3 class="fw-bold mt-2">Create Your Account</h3>
+        <p class="text-secondary small">Join the Deepfake-Protected Social Community</p>
+      </div>
+
+      <form action="{{ url_for('register') }}" method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Username</label>
+            <input type="text" name="username" class="form-control bg-dark text-light border-secondary" placeholder="praveen_ai" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Full Name</label>
+            <input type="text" name="full_name" class="form-control bg-dark text-light border-secondary" placeholder="Pidamarthi Praveen Kumar" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-secondary">Email Address</label>
+            <input type="email" name="email" class="form-control bg-dark text-light border-secondary" placeholder="praveenkumarpidamarthi01@gmail.com" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-secondary">Password</label>
+            <input type="password" name="password" class="form-control bg-dark text-light border-secondary" placeholder="Create a strong password" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-secondary">Short Bio</label>
+            <input type="text" name="bio" class="form-control bg-dark text-light border-secondary" placeholder="AI & ML Engineer | Sharing verified authentic media">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gradient w-100 py-2 mt-4 mb-3">Register Account</button>
+      </form>
+
+      <div class="text-center small text-secondary">
+        Already registered? <a href="{{ url_for('login') }}" class="text-info text-decoration-none">Sign In</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

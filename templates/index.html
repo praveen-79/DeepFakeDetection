@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+  <!-- Left Sidebar: Architecture & Security Stats -->
+  <div class="col-lg-4">
+    <div class="card-cyber p-4 mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-shield-lock-fill text-info me-2"></i>AI Gatekeeper Active</h5>
+        <span class="badge bg-success-subtle text-success border border-success-subtle">ONLINE</span>
+      </div>
+      <p class="text-secondary small mb-3">
+        Every uploaded photo or video is inspected before publication. Deepfake media is automatically intercepted and blocked from the social feed.
+      </p>
+
+      <div class="row g-2 text-center mb-3">
+        <div class="col-4">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="fs-5 fw-bold text-info">{{ stats.total_scans }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;">Total Scans</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="fs-5 fw-bold text-success">{{ stats.total_posts }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;">Verified Posts</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="fs-5 fw-bold text-danger">{{ stats.blocked_fakes }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;">Blocked Fakes</div>
+          </div>
+        </div>
+      </div>
+
+      <h6 class="text-uppercase text-secondary fw-semibold small mt-3 mb-2">Detection Pipeline Stages</h6>
+      <ul class="list-unstyled small text-light mb-0">
+        <li class="mb-2"><i class="bi bi-1-circle-fill text-info me-2"></i><strong>Preprocessing:</strong> Video-to-frames, OpenCV face crop, 256&times;256 &amp; 224&times;224 normalization.</li>
+        <li class="mb-2"><i class="bi bi-2-circle-fill text-info me-2"></i><strong>Feature Extraction:</strong> MesoNet (64-D) + XceptionNet (128-D) + Vision Transformer ViT (128-D).</li>
+        <li class="mb-2"><i class="bi bi-3-circle-fill text-info me-2"></i><strong>Feature Fusion:</strong> Concatenation into a 320-D unified forensic vector.</li>
+        <li><i class="bi bi-4-circle-fill text-info me-2"></i><strong>Classification:</strong> Random Forest Classifier (200 trees) Real/Fake decision.</li>
+      </ul>
+    </div>
+
+    <!-- Recent Gatekeeper Log -->
+    <div class="card-cyber p-4">
+      <h6 class="fw-bold mb-3"><i class="bi bi-activity text-info me-2"></i>Live Forensic Gatekeeper Log</h6>
+      {% for log in recent_logs %}
+        <div class="p-2 mb-2 rounded bg-dark border border-secondary border-opacity-25 small">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-truncate fw-semibold" style="max-width: 170px;">{{ log.filename }}</span>
+            {% if log.verdict == 'FAKE' %}
+              <span class="badge badge-fake">FAKE ({{ log.confidence }}%)</span>
+            {% else %}
+              <span class="badge badge-verified">REAL ({{ log.confidence }}%)</span>
+            {% endif %}
+          </div>
+          <div class="text-secondary mt-1" style="font-size: 0.74rem;">
+            Meso: {{ log.meso_score }}% | Xcep: {{ log.xception_score }}% | ViT: {{ log.vit_score }}% &rarr; <strong>{{ log.action_taken }}</strong>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Right Column: Create Post & Verified Feed -->
+  <div class="col-lg-8">
+    {% if last_rejection %}
+      <div class="card-cyber p-4 mb-4 border-danger border-opacity-75">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h5 class="fw-bold text-danger mb-0">
+            <i class="bi bi-shield-fill-exclamation me-2"></i>Deepfake Upload Blocked by AI Gatekeeper
+          </h5>
+          <span class="badge badge-fake">CONFIDENCE: {{ last_rejection.confidence }}% FAKE</span>
+        </div>
+        <p class="small text-light mb-3">
+          File <code>{{ last_rejection.filename }}</code> ({{ last_rejection.media_type }}, {{ last_rejection.frames_analyzed }} frame(s) analyzed) exhibited manipulation artifacts across the <strong>{{ last_rejection.fused_dim }}-D fused feature vector</strong> and was prevented from being shared.
+        </p>
+        <div class="row g-2 text-center small">
+          <div class="col-md-4">
+            <div class="p-2 rounded bg-dark">
+              <div class="text-secondary">MesoNet Anomaly</div>
+              <div class="fw-bold text-danger fs-6">{{ last_rejection.meso_score }}%</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-2 rounded bg-dark">
+              <div class="text-secondary">XceptionNet Anomaly</div>
+              <div class="fw-bold text-danger fs-6">{{ last_rejection.xception_score }}%</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-2 rounded bg-dark">
+              <div class="text-secondary">ViT Patch Attention Anomaly</div>
+              <div class="fw-bold text-danger fs-6">{{ last_rejection.vit_score }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Upload Media Card -->
+    <div class="card-cyber p-4 mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-cloud-arrow-up-fill text-info me-2"></i>Share Photo or Video</h5>
+      {% if current_user %}
+        <form action="{{ url_for('create_post') }}" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <textarea name="caption" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="What's happening, @{{ current_user.username }}? Share genuine photos or videos..."></textarea>
+          </div>
+          <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Upload Photo (.jpg, .png) or Video (.mp4, .avi)</label>
+              <input type="file" name="media" class="form-control form-control-sm bg-dark text-light border-secondary" accept="image/*,video/*" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Forensic Test Mode</label>
+              <select name="simulation_mode" class="form-select form-select-sm bg-dark text-light border-secondary">
+                <option value="auto" selected>Auto AI Detection (Default)</option>
+                <option value="simulate_deepfake">Simulate Deepfake Attack (Test Block)</option>
+                <option value="simulate_real">Verify Genuine Camera Feed</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-grid">
+              <label class="form-label small text-secondary mb-1 d-none d-md-block">&nbsp;</label>
+              <button type="submit" class="btn btn-gradient btn-sm py-2">
+                <i class="bi bi-send-check me-1"></i>Post
+              </button>
+            </div>
+          </div>
+        </form>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-between p-3 rounded bg-dark">
+          <span class="text-secondary small">Log in to upload photos and videos protected by our Deepfake Detection pipeline.</span>
+          <a href="{{ url_for('login') }}" class="btn btn-outline-info btn-sm">Login (Demo: praveen / praveen123)</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Social Media Feed -->
+    {% for post in posts %}
+      <div class="card-cyber p-4 mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar-circle" style="background: {{ post.avatar_color }};">
+              {{ post.full_name[0] | upper }}
+            </div>
+            <div>
+              <div class="fw-bold text-white">{{ post.full_name }} <span class="text-secondary fw-normal small">@{{ post.username }}</span></div>
+              <div class="text-secondary" style="font-size: 0.76rem;">{{ post.created_at }} &bull; {{ post.frames_analyzed }} frame(s) scanned</div>
+            </div>
+          </div>
+          <span class="badge badge-verified px-3 py-2 rounded-pill">
+            <i class="bi bi-patch-check-fill me-1"></i>Authentic ({{ post.authenticity_score }}%)
+          </span>
+        </div>
+
+        <p class="mb-3">{{ post.caption }}</p>
+
+        <div class="mb-3">
+          {% if post.media_type == 'video' %}
+            <video class="post-media" controls>
+              <source src="{{ url_for('static', filename='uploads/' ~ post.media_filename) }}">
+            </video>
+          {% else %}
+            <img src="{{ url_for('static', filename='uploads/' ~ post.media_filename) }}" alt="Post media" class="post-media">
+          {% endif %}
+        </div>
+
+        <!-- Multi-Model Telemetry Bar -->
+        <div class="p-2 px-3 rounded bg-dark border border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center small text-secondary mb-3">
+          <span><i class="bi bi-diagram-3 text-info me-1"></i><strong>Fused Vector (320-D)</strong></span>
+          <span>MesoNet Fake Risk: <strong class="text-success">{{ post.meso_score }}%</strong></span>
+          <span>XceptionNet Fake Risk: <strong class="text-success">{{ post.xception_score }}%</strong></span>
+          <span>ViT Fake Risk: <strong class="text-success">{{ post.vit_score }}%</strong></span>
+        </div>
+
+        <!-- Likes & Comments -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <form action="{{ url_for('toggle_like', post_id=post.id) }}" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-outline-secondary btn-sm text-light">
+              <i class="bi bi-heart-fill text-danger me-1"></i>{{ post.like_count }} Likes
+            </button>
+          </form>
+          <span class="text-secondary small">
+            <i class="bi bi-chat-left-text me-1"></i>{{ comments_by_post[post.id] | length }} Comments
+          </span>
+        </div>
+
+        {% if comments_by_post[post.id] %}
+          <div class="border-top border-secondary border-opacity-25 pt-2 mb-2">
+            {% for c in comments_by_post[post.id] %}
+              <div class="small mb-1">
+                <strong class="text-info">@{{ c.username }}:</strong> <span class="text-light">{{ c.content }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if current_user %}
+          <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="d-flex gap-2 mt-2">
+            <input type="text" name="content" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Write a comment..." required>
+            <button type="submit" class="btn btn-outline-info btn-sm">Reply</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
